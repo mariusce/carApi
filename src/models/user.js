@@ -7,7 +7,7 @@ const Schema        = mongoose.Schema;
 
 let UserSchema = new Schema(_.extend({
   carNumber: {type: String, unique: true, required: true, index: true},
-  contacts: [Schema.ObjectId]
+  contacts: [String]
 }, userCommon));
 
 let UserModel = mongoose.model('User', UserSchema);
