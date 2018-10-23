@@ -23,6 +23,10 @@ const createSchema = {
     lastName : {
       type: 'string',
       minLength: 0
+    },
+    email: {
+      type: 'string',
+      minLength: 0
     }
   },
   required: ['carNumber', 'password']
