@@ -1,0 +1,120 @@
+{
+  "_from": "strophe.js@1.2.16",
+  "_id": "strophe.js@1.2.16",
+  "_inBundle": false,
+  "_integrity": "sha512-r/Uq7aqrusg25Y0qHwV48cFnMY6K/CuZdGt3EggRx3kY4sMv8lG+AFoMlrmTcYVMG1BaJvQfv9Cthw4Ll8z7fQ==",
+  "_location": "/strophe.js",
+  "_phantomChildren": {},
+  "_requested": {
+    "type": "version",
+    "registry": true,
+    "raw": "strophe.js@1.2.16",
+    "name": "strophe.js",
+    "escapedName": "strophe.js",
+    "rawSpec": "1.2.16",
+    "saveSpec": null,
+    "fetchSpec": "1.2.16"
+  },
+  "_requiredBy": [
+    "#USER",
+    "/"
+  ],
+  "_resolved": "https://registry.npmjs.org/strophe.js/-/strophe.js-1.2.16.tgz",
+  "_shasum": "2ac837c9838f364821213a4cd7748789c13912f6",
+  "_spec": "strophe.js@1.2.16",
+  "_where": "/work/car/carMobile",
+  "author": {
+    "name": "Jack Moffit",
+    "url": "metajack"
+  },
+  "browser": "strophe.js",
+  "bugs": {
+    "url": "https://github.com/strophe/strophejs/issues"
+  },
+  "bundleDependencies": false,
+  "contributors": [
+    {
+      "name": "Nathan Zorn",
+      "url": "thepug"
+    },
+    {
+      "name": "Andreas Guth",
+      "url": "Gordin"
+    },
+    {
+      "name": "Anton Stroganov",
+      "url": "Aeon"
+    },
+    {
+      "name": "Florian Zeitz",
+      "url": "Florob"
+    },
+    {
+      "name": "Christopher Zorn",
+      "url": "twonds"
+    },
+    {
+      "name": "dodo"
+    },
+    {
+      "name": "Lee Boynton",
+      "url": "lboynton"
+    },
+    {
+      "name": "Theo Cushion",
+      "url": "theozaurus"
+    },
+    {
+      "name": "Brendon Crawford",
+      "url": "brendoncrawford"
+    },
+    {
+      "name": "JC Brand",
+      "url": "jcbrand"
+    }
+  ],
+  "deprecated": false,
+  "description": "Strophe.js is an XMPP library for JavaScript",
+  "devDependencies": {
+    "almond": "~0.3.0",
+    "http-server": "^0.10.0",
+    "jquery": "3.2.1",
+    "jshint": "^2.9.4",
+    "qunitjs": "~1.16.0",
+    "requirejs": "~2.3.2",
+    "run-headless-chromium": "^0.1.1",
+    "sinon": "1.17.7",
+    "sinon-qunit": "~2.0.0"
+  },
+  "files": [
+    "strophe.js",
+    "CHANGELOG.txt",
+    "LICENSE.txt",
+    "README.txt",
+    "src/"
+  ],
+  "homepage": "http://strophe.im/strophejs",
+  "keywords": [
+    "xmpp",
+    "message",
+    "bosh",
+    "websocket",
+    "browser"
+  ],
+  "license": "MIT",
+  "main": "strophe.js",
+  "name": "strophe.js",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/strophe/strophejs.git"
+  },
+  "scripts": {
+    "clean": "make clean",
+    "doc": "make doc",
+    "lint": "make jshint"
+  },
+  "version": "1.2.16",
+  "volo": {
+    "url": "https://raw.githubusercontent.com/strophe/strophejs/release-{version}/strophe.js"
+  }
+}

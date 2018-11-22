@@ -17,5 +17,9 @@
       "algorithm": "HS256",
       "expiresIn": "356d"
     }
-  }
+  },
+  "xmppPort": 7070,
+  "xmppDomain": "marius.lan",
+  "xmppWsServiceUri": "ws://marius.lan:7070/ws/",
+  "xmppHttpServiceUri": "http://marius.lan:7070/http-bind/"
 }

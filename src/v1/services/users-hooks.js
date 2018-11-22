@@ -2,6 +2,7 @@ const errors = require('@feathersjs/errors');
 const authenticate = require('../../hooks/authenticate');
 const hashPassword = require('../../hooks/hash-password');
 const validateBody = require('../../hooks/validate-body');
+const registerToXmppServer = require('../../hooks/register-to-xmpp-server');
 const config = require('../../core/config');
 const jwt = require('jsonwebtoken');
 
@@ -38,7 +39,9 @@ module.exports = {
     find: [authenticate({types: ['admin', 'user']})],
     get: [authenticate({types: ['admin', 'user']})],
     create: [
+      validateBody(createSchema),
       authenticate({exist: false, types: ['admin', 'user']}),
+      registerToXmppServer(),
       hashPassword(),
       hook => {
         if (!hook.data.phone && hook.params.authentication) {
@@ -46,7 +49,6 @@ module.exports = {
         }
         return Promise.resolve(hook);
       },
-      validateBody(createSchema)
     ],
     update: [() => {return Promise.reject(new errors.MethodNotAllowed());}],
     patch: [
