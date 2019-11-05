@@ -9,7 +9,7 @@ const express = require('@feathersjs/express');
 const socketio = require('@feathersjs/socketio');
 const v1 = require('./v1/api');
 const channels = require('./channels');
-
+const pushNotification = require('./core/notification');
 
 const mongoose = require('mongoose');
 const morgan = require('morgan');

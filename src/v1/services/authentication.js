@@ -4,9 +4,14 @@ const moment = require('moment');
 const hooks = require('./authentication-hooks');
 const sms = require('../../core/sms');
 const crypto = require('../../core/crypto');
+const {hasher} = require('../../core/crypto');
 const User = require('../../models/user');
 const Admin = require('../../models/admin');
 const config = require('../../core/config');
+const sgMail = require('@sendgrid/mail');
+const stropheChangePassword = require('../../hooks/strophe-change-password');
+
+sgMail.setApiKey(config.get('sendgrid').apiKey);
 
 //TODO: Move next to redis
 let Cache = {};
@@ -29,6 +34,7 @@ const generateAuthenticationCode = (params) => {
 //  let code = Math.floor(1000 + Math.random() * 9000).toString();
   let code = '1234';
   let model = undefined;
+  session.logWarning('called generateAuthenticationCode');
   switch (params.query.type) {
     case 'admin':
       model = Admin;
@@ -69,6 +75,7 @@ const authenticatePhone = (data, params) => {
   let code = data.secret;
   let now = moment();
   let entry = getObj(phone);
+  session.logWarning('called authenticatePhone');
   if (entry) {
     let end = entry.timestamp.add(5, 'minutes');
     if (now.isBefore(end) && (entry.code === code)) {
@@ -100,7 +107,6 @@ const authenticatePhone = (data, params) => {
         } else {
           payload.phone = phone;
         }
-        console.log('payload is: '+ JSON.stringify(payload));
         let token = jwt.sign(payload, config.get('authentication').secret, config.get('authentication').jwt);
         return Promise.resolve({accessToken:token});
       });
@@ -116,6 +122,10 @@ const authenticatePhone = (data, params) => {
 const authenticatePassword = (data, params) => {
   let session = params.session;
   let password = data.secret;
+  let carNumber = data.id;
+  let now = moment();
+  let entry = getObj(carNumber);
+  session.logWarning('called authenticatePassword');
   if (!password) {
     return Promise.reject(new errors.Forbidden('Authentication error', ['Invalid id/secret']));
   }
@@ -134,7 +144,14 @@ const authenticatePassword = (data, params) => {
   return model.findOne(query).then(user => {
     if (!user) {
       session.logWarning('User not found');
-      return Promise.reject(new errors.NotFound('User not found'));
+      // return Promise.reject(new errors.NotFound('User not found'));
+      let payload = {
+        exist: false,
+        type:  params.query.type || 'user',
+        carNumber: carNumber
+      };
+      let token = jwt.sign(payload, config.get('authentication').secret, config.get('authentication').jwt);
+      return Promise.resolve({accessToken:token, exists: false});
     } else {
       return crypto.compare(password, user.password).then(ok => {
         if (ok) {
@@ -144,7 +161,7 @@ const authenticatePassword = (data, params) => {
           };
           payload.userId = user._id.toString();
           let token = jwt.sign(payload, config.get('authentication').secret, config.get('authentication').jwt);
-          return Promise.resolve({accessToken:token});
+          return Promise.resolve({accessToken:token, exists: true});
         } else {
           return Promise.reject(new errors.Forbidden('Authentication error', ['Invalid id/secret']));
         }
@@ -155,9 +172,75 @@ const authenticatePassword = (data, params) => {
   });
 };
 
+const doesUserExist = (params) => {
+  let carNumber = params.query.carNumber;
+  let session = params.session;
+
+  return User.findOne({carNumber: carNumber}).then(user => {
+    if (!user) {
+      session.logInfo('User does not exist');
+      let payload = {
+        exist: false,
+        type:  'user',
+        carNumber: carNumber
+      };
+      let token = jwt.sign(payload, config.get('authentication').secret, config.get('authentication').jwt);
+      return Promise.resolve({accessToken:token, exists: false});
+    } else {
+      return Promise.resolve({exists: true});
+    }
+  }).catch(() => {
+    return Promise.reject(new errors.GeneralError('Failed to get user'));
+  });
+};
+
+const sendPasswordRecoveryMail = (params) => {
+  let carNumber = params.query.carNumber;
+  let session = params.session;
+
+  return User.findOne({carNumber: carNumber}).then(user => {
+    if (!user) {
+      session.logWarning('User not found');
+      return Promise.reject(new errors.NotFound('User not found'));
+    } else {
+      if (!user.email) {
+        session.logWarning('User has no email');
+        return Promise.reject(new errors.NotFound('User has no email'));
+      }
+      const newPass = Math.random().toString(36).substr(2, 6);
+
+      return hasher(newPass).then((hashedNewPass) => {
+        console.log('new pass is: ' + newPass);
+        console.log('hashed new pass is: ' + hashedNewPass);
+
+        user.password = hashedNewPass;
+        user.save();
+        const plainText = `Your new password is: ${newPass} \n`;
+        const html      = `<b>Your new password is: ${newPass} </b>`;
+        return sgMail.send({
+          from:    '"Car Mate" <recover@carmate.com>', // sender address
+          to:      user.email, // list of receivers
+          subject: 'Car Mate password recovery', // Subject line
+          text:    plainText, // plain text body
+          html:    html // html body
+        }).catch(() => {
+          return Promise.reject(new errors.GeneralError('Failed to send password recovery email'));
+        });
+      });
+    }
+  });
+};
+
 const AuthenticationService = {
   find(params) {
-    return generateAuthenticationCode(params);
+    console.log('get auth, params: ' + JSON.stringify(params.query));
+    if (params.query && params.query.forgotPassword) {
+      return sendPasswordRecoveryMail(params);
+    } else {
+      return doesUserExist(params);
+    }
+    // return Promise.resolve({});
+    //return generateAuthenticationCode(params);
   },
   create(data, params) {
     if (data.method === 'phone') {

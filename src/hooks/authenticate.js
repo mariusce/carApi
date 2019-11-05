@@ -14,7 +14,6 @@ module.exports = (options) => {
     let decoded = undefined;
     let model = User;
 
-    console.log('options is: ' + JSON.stringify(options));
     if (options) {
       if (!options.hasOwnProperty('exist')) {
         options.exist = true;
@@ -53,24 +52,24 @@ module.exports = (options) => {
     }
 
     if (options.exist) {
-      // existing user (we can search it by phone or by id)
-      if (!decoded.phone && !decoded.userId) {
+      // existing user (we can search it by car number or by id)
+      if (!decoded.carNumber && !decoded.userId) {
         session.logWarning('Authentication error. Missing token userId');
         return Promise.reject(new errors.Forbidden('Authentication error', ['Invalid token']));
       }
       if (decoded.userId) {
         userFindPromise = model.find({_id: ObjectId(decoded.userId)});
       }
-      if (decoded.phone) {
-        userFindPromise = model.find({phone: decoded.phone});
+      if (decoded.carNumber) {
+        userFindPromise = model.find({carNumber: decoded.carNumber});
       }
     } else {
-      // new user (we need phone number)
-      if (!decoded.phone) {
-        session.logWarning('Authentication error. Missing token phone');
+      // new user (we need car number)
+      if (!decoded.carNumber) {
+        session.logWarning('Authentication error. Missing token car number');
         return Promise.reject(new errors.Forbidden('Authentication error', ['Invalid token']));
       }
-      userFindPromise = model.find({phone: decoded.phone});
+      userFindPromise = model.find({carNumber: decoded.carNumber});
     }
     return userFindPromise.then(user => {
       if (options.exist && _.isEmpty(user)) {
@@ -81,6 +80,7 @@ module.exports = (options) => {
         session.logWarning(`Authentication error. User already exist. ${JSON.stringify(user)}`);
         return Promise.reject(new errors.Forbidden('Authentication error', ['User already exist']));
       }
+
       hook.params.user = user;
       hook.params.authentication = {
         decoded: decoded,

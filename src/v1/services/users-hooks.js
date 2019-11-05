@@ -5,6 +5,7 @@ const validateBody = require('../../hooks/validate-body');
 const registerToXmppServer = require('../../hooks/register-to-xmpp-server');
 const config = require('../../core/config');
 const jwt = require('jsonwebtoken');
+const pushNotification = require('../../core/notification');
 
 const createSchema = {
   type: 'object',
@@ -17,6 +18,10 @@ const createSchema = {
       type: 'string',
       minLength: 4
     },
+    passwordCheck : {
+      type: 'string',
+      minLength: 4
+    },
     firstName : {
       type: 'string',
       minLength: 0
@@ -25,12 +30,25 @@ const createSchema = {
       type: 'string',
       minLength: 0
     },
+    phone: {
+      type: 'string',
+      minLength: 0,
+    },
     email: {
       type: 'string',
-      minLength: 0
+      minLength: 3
     }
   },
-  required: ['carNumber', 'password']
+  required: ['carNumber', 'password', 'passwordCheck', 'email']
+};
+
+const getOfflineMsgFromEjabberd = () => {
+  return hook => {
+    let session = hook.params.session;
+    session.logInfo(`Got offline message "${hook.data.body}" from ${hook.data.from} to ${hook.data.to}, vhost ${hook.data.vhost}`);
+    pushNotification(hook.data);
+    return Promise.resolve(hook);
+  }
 };
 
 module.exports = {
@@ -39,13 +57,13 @@ module.exports = {
     find: [authenticate({types: ['admin', 'user']})],
     get: [authenticate({types: ['admin', 'user']})],
     create: [
+      getOfflineMsgFromEjabberd(),
       validateBody(createSchema),
       authenticate({exist: false, types: ['admin', 'user']}),
-      registerToXmppServer(),
       hashPassword(),
       hook => {
-        if (!hook.data.phone && hook.params.authentication) {
-          hook.data.phone = hook.params.authentication.decoded.phone;
+        if (!hook.data.carNumber && hook.params.authentication) {
+          hook.data.carNumber = hook.params.authentication.decoded.carNumber;
         }
         return Promise.resolve(hook);
       },
@@ -53,7 +71,10 @@ module.exports = {
     update: [() => {return Promise.reject(new errors.MethodNotAllowed());}],
     patch: [
       authenticate({types: ['admin', 'user']}),
-      hashPassword()
+      hashPassword(),
+      hook => {
+        return Promise.resolve(hook);
+      },
     ],
     remove: [authenticate({types: ['admin', 'user']})]
   },
@@ -65,12 +86,14 @@ module.exports = {
     create: [
       hook => {
         let payload = {
-          exist: true,
-          userId: hook.result._id
+          exist:  true,
+          userId: hook.result._id,
+          type:   hook.params.authentication.decoded.type
         };
         hook.result.accessToken = jwt.sign(payload, config.get('authentication').secret, config.get('authentication').jwt);
         return Promise.resolve(hook);
-      }
+      },
+      registerToXmppServer(),
     ],
     update: [],
     patch: [],

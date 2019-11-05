@@ -1,34 +1,41 @@
 const config = require('../core/config');
+const User = require('../models/user');
 const { toLower } = require('lodash');
+
 const jsdom = require('jsdom');
 const { JSDOM } = jsdom;
 const window = (new JSDOM('')).window;
 const xmldom = require('xmldom');
 window.DOMParser = xmldom.DOMParser;
 window.document = new window.DOMParser().parseFromString("<?xml version='1.0'?>", 'text/xml');
-const Strophe = require("../../lib/strophe.js/strophe.js").Strophe;
-const $iq = require("../../lib/strophe.js/strophe.js").$iq;
+const Strophe = require("../../lib/strophejs/dist/strophe.js").Strophe;
+const $iq = require("../../lib/strophejs/dist/strophe.js").$iq;
 
+let registrationId = Math.random().toString(36).replace(/[^a-z]+/g, '').substr(0, 10);
 
 module.exports = () => {
   return function (context) {
     if (!context || !context.data) {
       return Promise.reject(new Error(`Missing context information.`));
     }
-    if (context.type !== 'before') {
-      return Promise.reject(new Error(`The 'registerToXmppServer' hook should only be used as a 'before' hook.`));
-    }
+    // if (context.type !== 'before') {
+    //   return Promise.reject(new Error(`The 'registerToXmppServer' hook should only be used as a 'before' hook.`));
+    // }
 
     let connection = null;
-    connection = new Strophe.Connection(config.get('xmppHttpServiceUri'));
+    // const password = context.data.password;
+    const password = context.data.ejabberdPassword;
+    registrationId = Math.random().toString(36).replace(/[^a-z]+/g, '').substr(0, 10);
+    connection = new Strophe.Connection(config.get('xmppWsServiceUri'));
     connection.rawInput = rawInput;
     connection.rawOutput = rawOutput;
     connection.register.connect(config.get('xmppDomain'), function (status) {
       switch (status) {
         case Strophe.Status.REGISTER:
           connection.register.fields.username = toLower(context.data.carNumber);
-          connection.register.fields.password = context.data.password;
+          connection.register.fields.password = password;
           console.info("registering...");
+          console.info("pass..." + password);
           connection.register.submit();
           break;
         case Strophe.Status.REGISTERED:
@@ -39,10 +46,12 @@ module.exports = () => {
           console.error("Username already exists.");
           return Promise.reject(new Error(`Failed to register user ${context.data.carNumber} to the XMPP server: username already exists.`));
         case Strophe.Status.NOTACCEPTABLE:
+          deleteUser(context.data.carNumber);
           console.error("Registration form not properly filled out.");
           return Promise.reject(new Error(`Failed to register user ${context.data.carNumber} to the XMPP server: registration form not properly filled out.`));
         case Strophe.Status.REGIFAIL:
           console.log("The Server does not support In-Band Registration");
+          deleteUser(context.data.carNumber);
           return Promise.reject(new Error(`Failed to register user ${context.data.carNumber} to the XMPP server: the Server does not support In-Band Registration.`));
         case Strophe.Status.CONNECTED:
           console.info("Connected.");
@@ -67,6 +76,14 @@ const rawOutput = (data) => {
   console.log('SENT: ' + data);
 };
 
+const deleteUser = (carNumber) => {
+  User.find({ carNumber: carNumber }).remove(function(err) {
+    if (err) {
+      console.error(`User ${carNumber} not found.`);
+    }
+    console.log (`Deleted unregistered user ${carNumber}`);
+  });
+};
 
 Strophe.addConnectionPlugin('register', {
   _connection: null,
@@ -259,7 +276,7 @@ Strophe.addConnectionPlugin('register', {
     // send a get request for registration, to get all required data fields
     conn._addSysHandler(this._get_register_cb.bind(this),
       null, "iq", null, null);
-    conn.send($iq({type: "get"}).c("query",
+    conn.send($iq({type: "get", id: registrationId}).c("query",
       {xmlns: Strophe.NS.REGISTER}).tree());
 
     return true;
@@ -311,7 +328,7 @@ Strophe.addConnectionPlugin('register', {
    */
   submit: function () {
     var i, name, query, fields, conn = this._connection;
-    query = $iq({type: "set"}).c("query", {xmlns:Strophe.NS.REGISTER});
+    query = $iq({type: "set", id: registrationId}).c("query", {xmlns:Strophe.NS.REGISTER});
 
     // set required fields
     fields = Object.keys(this.fields);

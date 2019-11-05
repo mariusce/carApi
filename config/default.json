@@ -18,8 +18,11 @@
       "expiresIn": "356d"
     }
   },
-  "xmppPort": 7070,
-  "xmppDomain": "marius.lan",
-  "xmppWsServiceUri": "ws://marius.lan:7070/ws/",
-  "xmppHttpServiceUri": "http://marius.lan:7070/http-bind/"
+  "xmppPort": 5280,
+  "xmppDomain": "10.10.10.7",
+  "xmppWsServiceUri": "ws://10.10.10.7:5280/xmpp",
+  "xmppHttpServiceUri": "http://10.10.10.7:5280/bosh/",
+  "sendgrid": {
+    "apiKey": "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"
+  }
 }

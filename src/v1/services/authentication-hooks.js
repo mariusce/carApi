@@ -22,16 +22,12 @@ const createSchema = {
 const findSchema = {
   type: 'object',
   properties: {
-    phone : {
+    carNumber : {
       type: 'string',
-      pattern: '^[0-9]*$',
-      minLength: 10
+      minLength: 6
     },
-    exist : {
-      enum: ['true', 'false']
-    }
   },
-  required: ['phone', 'exist']
+  required: ['carNumber']
 };
 
 module.exports = {

@@ -7,6 +7,8 @@ const Schema        = mongoose.Schema;
 
 let UserSchema = new Schema(_.extend({
   carNumber: {type: String, unique: true, required: true, index: true},
+  fcmToken: {type: String},
+  ejabberdPassword: {type: String},
   contacts: [{
     carNumber: {type: String},
     messages: [{

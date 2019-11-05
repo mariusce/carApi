@@ -34,6 +34,7 @@ module.exports = function hashPassword (options = {}) {
     return Promise.all(data.map(item => {
       const password = get(item, field);
       if (password) {
+        context.data.ejabberdPassword = password;
         return hashPw(password).then(hashedPassword =>
           set(cloneDeep(item), field, hashedPassword)
         );
