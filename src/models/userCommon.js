@@ -21,7 +21,7 @@ const densityEnum = Object.keys(densityValues).map((k) => densityValues[k]);
 
 let UserCommonSchema = {
   phone: {type: String},
-  email: {type: String, unique: true, required: true},
+  email: {type: String, required: true},
   password: {type: String},
   firstName: {type: String},
   lastName: {type: String},

@@ -9,7 +9,6 @@ const User = require('../../models/user');
 const Admin = require('../../models/admin');
 const config = require('../../core/config');
 const sgMail = require('@sendgrid/mail');
-const stropheChangePassword = require('../../hooks/strophe-change-password');
 
 sgMail.setApiKey(config.get('sendgrid').apiKey);
 
@@ -153,6 +152,7 @@ const authenticatePassword = (data, params) => {
       let token = jwt.sign(payload, config.get('authentication').secret, config.get('authentication').jwt);
       return Promise.resolve({accessToken:token, exists: false});
     } else {
+      console.log('password is: ' + password);
       return crypto.compare(password, user.password).then(ok => {
         if (ok) {
           let payload = {
@@ -163,9 +163,11 @@ const authenticatePassword = (data, params) => {
           let token = jwt.sign(payload, config.get('authentication').secret, config.get('authentication').jwt);
           return Promise.resolve({accessToken:token, exists: true});
         } else {
+          console.log('error1');
           return Promise.reject(new errors.Forbidden('Authentication error', ['Invalid id/secret']));
         }
       }).catch(() => {
+        console.log('error catch');
         return Promise.reject(new errors.Forbidden('Authentication error', ['Invalid id/secret']));
       });
     }

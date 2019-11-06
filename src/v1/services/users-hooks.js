@@ -42,11 +42,13 @@ const createSchema = {
   required: ['carNumber', 'password', 'passwordCheck', 'email']
 };
 
-const getOfflineMsgFromEjabberd = () => {
+const getOfflineMsgFromEjabberd = (options) => {
   return hook => {
-    let session = hook.params.session;
-    session.logInfo(`Got offline message "${hook.data.body}" from ${hook.data.from} to ${hook.data.to}, vhost ${hook.data.vhost}`);
-    pushNotification(hook.data);
+    if (options && options.ejabberdOffline) {
+      let session = hook.params.session;
+      session.logInfo(`Got offline message "${hook.data.body}" from ${hook.data.from} to ${hook.data.to}, vhost ${hook.data.vhost}`);
+      pushNotification(hook.data);
+    }
     return Promise.resolve(hook);
   }
 };
@@ -57,7 +59,7 @@ module.exports = {
     find: [authenticate({types: ['admin', 'user']})],
     get: [authenticate({types: ['admin', 'user']})],
     create: [
-      getOfflineMsgFromEjabberd(),
+      getOfflineMsgFromEjabberd({ejabberdOffline: true}),
       validateBody(createSchema),
       authenticate({exist: false, types: ['admin', 'user']}),
       hashPassword(),
