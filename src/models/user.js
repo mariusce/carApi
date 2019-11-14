@@ -11,6 +11,7 @@ let UserSchema = new Schema(_.extend({
   ejabberdPassword: {type: String},
   contacts: [{
     carNumber: {type: String},
+    email: {type: String},
     messages: [{
       _id: {type: String},
       text: {type: String},

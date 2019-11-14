@@ -6,6 +6,7 @@ const registerToXmppServer = require('../../hooks/register-to-xmpp-server');
 const config = require('../../core/config');
 const jwt = require('jsonwebtoken');
 const pushNotification = require('../../core/notification');
+const updatePassword = require('../../hooks/update-password');
 
 const createSchema = {
   type: 'object',
@@ -42,9 +43,9 @@ const createSchema = {
   required: ['carNumber', 'password', 'passwordCheck', 'email']
 };
 
-const getOfflineMsgFromEjabberd = (options) => {
+const getOfflineMsgFromEjabberd = () => {
   return hook => {
-    if (options && options.ejabberdOffline) {
+    if (hook.params && hook.params.query && hook.params.query.ejabberdOffline) {
       let session = hook.params.session;
       session.logInfo(`Got offline message "${hook.data.body}" from ${hook.data.from} to ${hook.data.to}, vhost ${hook.data.vhost}`);
       pushNotification(hook.data);
@@ -59,7 +60,7 @@ module.exports = {
     find: [authenticate({types: ['admin', 'user']})],
     get: [authenticate({types: ['admin', 'user']})],
     create: [
-      getOfflineMsgFromEjabberd({ejabberdOffline: true}),
+      getOfflineMsgFromEjabberd(),
       validateBody(createSchema),
       authenticate({exist: false, types: ['admin', 'user']}),
       hashPassword(),
@@ -73,9 +74,13 @@ module.exports = {
     update: [() => {return Promise.reject(new errors.MethodNotAllowed());}],
     patch: [
       authenticate({types: ['admin', 'user']}),
-      hashPassword(),
+      // hashPassword(),
       hook => {
-        return Promise.resolve(hook);
+        if (hook.data && hook.data.newPassword) {
+          return updatePassword(hook);
+        } else {
+          return Promise.resolve(hook);
+        }
       },
     ],
     remove: [authenticate({types: ['admin', 'user']})]
