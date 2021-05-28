@@ -58,7 +58,7 @@
     "strophejs-plugins": "0.0.7",
     "uuid": "^3.3.2",
     "winston": "^2.4.3",
-    "ws": "^6.2.1",
+    "ws": "^7.4.5",
     "xmldom": "^0.1.27"
   },
   "devDependencies": {
