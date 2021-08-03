@@ -59,7 +59,7 @@
     "uuid": "^3.3.2",
     "winston": "^2.4.3",
     "ws": "^6.2.1",
-    "xmldom": "^0.1.27"
+    "xmldom": "^0.6.0"
   },
   "devDependencies": {
     "eslint": "^4.19.1",
